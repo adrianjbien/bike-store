@@ -20,7 +20,7 @@ app.get('/', (request, response) => {
 app.get('/categories', db.getCategories)
 app.get('/products', db.getProducts)
 app.get('/products/:id', db.getProductById)
-// app.post('/products', db.createProduct)
+app.post('/products', db.createProduct)
 app.put('/products/:id', db.updateProduct)
 app.get('/orders', db.getOrders)
 app.get('/orders/status/:id', db.getOrdersStatus)

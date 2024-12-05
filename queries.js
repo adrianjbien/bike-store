@@ -1,3 +1,4 @@
+const {response} = require("express");
 const knex = require('knex')({
   client: 'pg',
   connection: {
@@ -29,15 +30,16 @@ const getProducts = async (request, response) => {
   }
 }
 
-const getProductById = (request, response) => {
+const getProductById = async (request, response) => {
   const id = parseInt(request.params.id)
 
-  pool.query('SELECT * FROM products WHERE product_id = $1', [id], (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(200).json(results.rows)
-  })
+  try {
+    const result = await knex.select('*').from('products').where('product_id', id);
+    response.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    response.status(500).json({ error: 'Database query failed' });
+  }
 }
 
 const createProduct = async (request, response) => {
@@ -97,16 +99,35 @@ const getOrdersStatus = (request, response) => {
   })
 }
 
-const createOrder = (request, response) => {
-  const { accept_date, order_status_id, user_name, email, telephone_number } = request.body
+const createOrder = async (request, response) => {
+  const { product_id, quantity, accept_date, order_status_id, user_name, email, telephone_number } = request.body
 
-  pool.query('INSERT INTO orders (accept_date, order_status_id, user_name, email, telephone_number) VALUES ($1, $2, $3, $4, $5) RETURNING *', 
-    [accept_date, order_status_id, user_name, email, telephone_number], (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(201).send(`Order added with ID: ${results.rows[0].id}`)
-  })
+  try {
+    const [newOrder] = await knex('orders')
+    .insert({
+      accept_date,
+      order_status_id,
+      user_name,
+      email,
+      telephone_number
+    })
+        .returning('*');
+
+    const order_id = newOrder.order_id
+
+    const [newProductOrder] = await knex('product_orders')
+    .insert({
+      product_id,
+      order_id,
+      quantity
+    })
+    .returning('*');
+
+    response.status(201).send(`Order added with ID: ${newOrder.id}`);
+  } catch (error){
+      console.error(error);
+      response.status(500).json({error: 'Failed to create order'});
+  }
 }
 
 const getStatus = async (request, response) => {
