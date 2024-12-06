@@ -1,8 +1,6 @@
 import {
-  ReasonPhrases,
   StatusCodes,
   getReasonPhrase,
-  getStatusCode,
 } from 'http-status-codes';
 
 const {response} = require("express");
