@@ -1,3 +1,10 @@
+import {
+  ReasonPhrases,
+  StatusCodes,
+  getReasonPhrase,
+  getStatusCode,
+} from 'http-status-codes';
+
 const {response} = require("express");
 const knex = require('knex')({
   client: 'pg',
@@ -13,10 +20,11 @@ const knex = require('knex')({
 const getProducts = async (request, response) => {
   try {
     const results = await knex.select('*').from('products');
-    response.status(200).json(results);
+    response.status(StatusCodes.OK).json(results);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: 'Database query failed' });
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) });
   }
 }
 
@@ -25,10 +33,10 @@ const getProductById = async (request, response) => {
 
   try {
     const result = await knex.select('*').from('products').where('product_id', id);
-    response.status(200).json(result);
+    response.status(StatusCodes.OK).json(result);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: 'Database query failed' });
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Database query failed' });
   }
 }
 
@@ -46,10 +54,10 @@ const createProduct = async (request, response) => {
       })
       .returning('*'); // Zwraca dodany rekord
 
-    response.status(201).send(`Product added with ID: ${newProduct.id}`);
+    response.status(StatusCodes.CREATED).send(`Product added with ID: ${newProduct.id}`);
   } catch (error) {
     console.error('Error adding product:', error);
-    response.status(500).json({ error: 'Failed to create product' });
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to create product' });
   }
 };
 
@@ -66,10 +74,10 @@ const updateProduct = async (request, response) => {
           product_category_id
         })
         .returning("*");
-    response.status(200).send(`Product updated with ID: ${id}`);
+    response.status(StatusCodes.OK).send(`Product updated with ID: ${id}`);
 
   } catch (error) {
-    response.status(500).json({ error: 'Failed to update product' });
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to update product' });
   }
 
 }
@@ -77,20 +85,20 @@ const updateProduct = async (request, response) => {
 const getCategories = async (request, response) => {
   try {
     const results = await knex.select('*').from('categories');
-    response.status(200).json(results);
+    response.status(StatusCodes.OK).json(results);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: 'Database query failed' });
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Database query failed' });
   }
 };
 
 const getOrders = async (request, response) => {
   try {
     const results = await knex.select('*').from('orders');
-    response.status(200).json(results);
+    response.status(StatusCodes.OK).json(results);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: 'Database query failed' });
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Database query failed' });
   }
 }
 
@@ -98,10 +106,10 @@ const getOrdersStatus = async (request, response) => {
   const id = parseInt(request.params.id)
   try {
     const result = await knex.select('*').from('orders').where('order_status_id', id)
-    response.status(200).json(result);
+    response.status(StatusCodes.OK).json(result);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: 'Database query failed' });
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Database query failed' });
   }
 }
 
@@ -134,10 +142,10 @@ const createOrder = async (request, response) => {
             quantity
           });
     }
-    response.status(201).send(`Order added with ID: ${newOrder.id}`);
+    response.status(StatusCodes.CREATED).send(`Order added with ID: ${newOrder.id}`);
   } catch (error){
       console.error(error);
-      response.status(500).json({error: 'Failed to create order'});
+      response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error: 'Failed to create order'});
   }
 }
 
@@ -149,10 +157,10 @@ const updateOrderStatus = async (request, response) => {
     const newOrder = await knex('orders').where("order_id", id).update({
       order_status_id: order_status_id,
     })
-    response.status(200).send(`Order updated with ID: ${id}`);
+    response.status(StatusCodes.OK).send(`Order updated with ID: ${id}`);
   } catch (error) {
     console.error(error);
-    response.status(500).json({error: 'Failed to update order'});
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error: 'Failed to update order'});
   }
 }
 
@@ -162,10 +170,10 @@ const showProductsInOrder = async (request, response) => {
     const result = await knex.select('*').from('product_orders')
         .where('order_id', id)
 
-    response.status(200).json(result);
+    response.status(StatusCodes.OK).json(result);
   } catch (error) {
     console.error(error);
-    response.status(500).json({error: 'Failed to show order'});
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error: 'Failed to show order'});
   }
 
 }
@@ -173,10 +181,10 @@ const showProductsInOrder = async (request, response) => {
 const getStatus = async (request, response) => {
   try {
     const results = await knex.select('*').from('order_status');
-    response.status(200).json(results);
+    response.status(StatusCodes.OK).json(results);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: 'Database query failed' });
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Database query failed' });
   }
 }
 
