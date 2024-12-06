@@ -26,6 +26,8 @@ app.get('/orders', db.getOrders)
 app.get('/orders/status/:id', db.getOrdersStatus)
 app.post('/orders', db.createOrder)
 app.get('/status', db.getStatus)
+app.get('/order/:id/products', db.showProductsInOrder)
+app.put('/orders/:id', db.updateOrderStatus)
 
 
 
