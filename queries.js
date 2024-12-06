@@ -88,7 +88,7 @@ const updateProduct = async (request, response) => {
         .returning("*");
 
     if (!update) {
-      return response.status(404).json({
+      return response.status(StatusCodes.NOT_FOUND).json({
         error: 'Product not found',
         details: `No product found with ID: ${id}`,
       })}
