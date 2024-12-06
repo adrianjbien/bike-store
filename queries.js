@@ -1,7 +1,6 @@
-import {
-  StatusCodes,
-  getReasonPhrase,
-} from 'http-status-codes';
+const StatusCodes = require('http-status-codes');
+
+
 
 const {response} = require("express");
 const knex = require('knex')({
@@ -22,7 +21,7 @@ const getProducts = async (request, response) => {
   } catch (error) {
     console.error(error);
     response.status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) });
+        .json({ error: 'Database query failed' });
   }
 }
 
@@ -41,6 +40,13 @@ const getProductById = async (request, response) => {
 const createProduct = async (request, response) => {
   const { name, description, unit_cost, unit_weigth, product_category_id } = request.body;
 
+  if (!name || !description || unit_cost <= 0 || unit_weigth <= 0) {
+    return response.status(StatusCodes.BAD_REQUEST).json({
+      error: 'Invalid product data',
+      details: 'Name and description must be non-empty, cost and weight must be positive values.',
+    });
+  }
+
   try {
     const [newProduct] = await knex('products')
       .insert({
@@ -55,13 +61,21 @@ const createProduct = async (request, response) => {
     response.status(StatusCodes.CREATED).send(`Product added with ID: ${newProduct.id}`);
   } catch (error) {
     console.error('Error adding product:', error);
-    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to create product' });
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to create product', details: error.message });
   }
 };
 
 const updateProduct = async (request, response) => {
   const id = parseInt(request.params.id)
   const { name, description, unit_cost, unit_weigth, product_category_id } = request.body;
+
+  if (!name || !description || unit_cost <= 0 || unit_weigth <= 0) {
+    return response.status(StatusCodes.BAD_REQUEST).json({
+      error: 'Invalid product data',
+      details: 'Name and description must be non-empty, cost and weight must be positive values.',
+    });
+  }
+
   try {
     const [update] = await knex('products').where('product_id', id)
         .update({
@@ -72,12 +86,19 @@ const updateProduct = async (request, response) => {
           product_category_id
         })
         .returning("*");
+
+    if (!update) {
+      return response.status(404).json({
+        error: 'Product not found',
+        details: `No product found with ID: ${id}`,
+      })}
+
     response.status(StatusCodes.OK).send(`Product updated with ID: ${id}`);
 
   } catch (error) {
-    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to update product' });
+    console.error('Error updating product:', error);
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to update product', details: error.message });
   }
-
 }
 
 const getCategories = async (request, response) => {
@@ -114,6 +135,35 @@ const getOrdersStatus = async (request, response) => {
 const createOrder = async (request, response) => {
   const {accept_date, order_status_id, user_name, email, telephone_number, products } = request.body
 
+  if (!user_name || !email || !telephone_number) {
+    return response.status(StatusCodes.BAD_REQUEST).json({
+      error: 'Invalid user data',
+      details: 'User name, email, and telephone number are required.',
+    });
+  }
+  if (!/^\d+$/.test(telephone_number)) {
+    return response.status(StatusCodes.BAD_REQUEST).json({
+      error: 'Invalid phone number',
+      details: 'Telephone number must contain only digits.',
+    });
+  }
+  // Walidacja produktów
+  if (!products || products.length === 0) {
+    return response.status(StatusCodes.BAD_REQUEST).json({
+      error: 'No products provided',
+      details: 'Order must include at least one product.',
+    });
+  }
+
+  for (const product of products) {
+    if (product.quantity <= 0) {
+      return response.status(StatusCodes.BAD_REQUEST).json({
+        error: 'Invalid product quantity',
+        details: `Quantity for product ID ${product.product_id} must be greater than zero.`,
+      });
+    }
+  }
+
   try {
     const [newOrder] = await knex('orders')
     .insert({
@@ -127,9 +177,6 @@ const createOrder = async (request, response) => {
 
     const order_id = newOrder.order_id
 
-    // console.log(products[0]['product_id'])
-    // console.log(products.length)
-
     for (let i=0; i<products.length; i++) {
       let product_id = products[i]['product_id']
       let quantity = products[i]['quantity']
@@ -140,10 +187,10 @@ const createOrder = async (request, response) => {
             quantity
           });
     }
-    response.status(StatusCodes.CREATED).send(`Order added with ID: ${newOrder.id}`);
-  } catch (error){
-      console.error(error);
-      response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error: 'Failed to create order'});
+    response.status(StatusCodes.CREATED).json({ message: `Order created`, order: newOrder });
+  } catch (error) {
+      console.error('Error creating order:', error);
+      response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to create order', details: error.message });
   }
 }
 
@@ -151,14 +198,35 @@ const updateOrderStatus = async (request, response) => {
   const id = parseInt(request.params.id)
   const {order_status_id} = request.body
 
+  const order = await knex('orders').where('order_id', id)
+
+  if (!order) {
+    return response.status(StatusCodes.NOT_FOUND).json({
+      error: 'Order not found',
+      details: `No order found with ID: ${id}`,
+    });
+  }
+  if (order.order_status_id === 'CANCELLED') {
+    return response.status(StatusCodes.BAD_REQUEST).json({
+      error: 'Cannot update cancelled order',
+      details: 'Once an order is cancelled, its status cannot be changed.',
+    });
+  }
+  if (order.order_status_id > order_status_id) {
+    return response.status(StatusCodes.BAD_REQUEST).json({
+      error: 'Invalid status update',
+      details: 'Order status cannot be downgraded.',
+    });
+  }
+
   try {
     const newOrder = await knex('orders').where("order_id", id).update({
       order_status_id: order_status_id,
     })
-    response.status(StatusCodes.OK).send(`Order updated with ID: ${id}`);
+    response.status(StatusCodes.OK).json({ message: `Order status updated`, order: newOrder });
   } catch (error) {
-    console.error(error);
-    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error: 'Failed to update order'});
+    console.error('Error updating order status:', error);
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to update order status', details: error.message });
   }
 }
 
