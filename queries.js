@@ -258,7 +258,11 @@ const getProductSeoDescription = async (request, response) => {
   const id = parseInt(request.params.id);
 
   try {
-    const [product] = await knex.select('*').from('products').where('product_id', id);
+    const [product] = await knex
+        .select('products.*', 'categories.name as category_name') // Alias the 'name' column from 'categories' as 'category_name'
+        .from('products')
+        .join('categories', 'products.product_category_id', '=', 'categories.category_id')
+        .where('products.product_id', id);
 
     if (!product) {
       return response.status(StatusCodes.NOT_FOUND).json({ error: 'Product not found' });
@@ -266,7 +270,7 @@ const getProductSeoDescription = async (request, response) => {
 
     const prompt = `Generate an SEO-friendly description for the following product: 
       Name: ${product.name}, 
-      Category: ${product.product_category_id}, 
+      Category: ${product.category_name}, 
       Price: ${product.unit_cost}, 
       Description: ${product.description}.
       The output should be engaging and optimized for search engines.`;
@@ -310,7 +314,7 @@ const getProductSeoDescription = async (request, response) => {
           </head>
           <body>
             <h1>${product.name}</h1>
-            <p><strong>Category:</strong> ${product.product_category_id}</p>
+            <p><strong>Category:</strong> ${product.category_name}</p>
             <p><strong>Price:</strong> ${product.unit_cost}</p>
             <p><strong>Description:</strong> ${product.description}</p>
             <h2>SEO-friendly Description:</h2>
