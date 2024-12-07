@@ -28,6 +28,7 @@ app.post('/orders', db.createOrder)
 app.get('/status', db.getStatus)
 app.get('/order/:id/products', db.showProductsInOrder)
 app.put('/orders/:id', db.updateOrderStatus)
+app.get('/products/:id/seo-description', db.getProductSeoDescription)
 
 
 

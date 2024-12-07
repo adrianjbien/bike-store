@@ -1,4 +1,5 @@
 const StatusCodes = require('http-status-codes');
+const axios = require('axios');
 
 
 
@@ -9,7 +10,7 @@ const knex = require('knex')({
     host: '127.0.0.1',
     port: 5432,
     user: 'postgres',
-    password: 'Zenek4martyniuk9',
+    password: 'postgres',
     database: 'aji',
   },
 });
@@ -253,7 +254,83 @@ const getStatus = async (request, response) => {
     response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Database query failed' });
   }
 }
+const getProductSeoDescription = async (request, response) => {
+  const id = parseInt(request.params.id);
 
+  try {
+    const [product] = await knex.select('*').from('products').where('product_id', id);
+
+    if (!product) {
+      return response.status(StatusCodes.NOT_FOUND).json({ error: 'Product not found' });
+    }
+
+    const prompt = `Generate an SEO-friendly description for the following product: 
+      Name: ${product.name}, 
+      Category: ${product.product_category_id}, 
+      Price: ${product.unit_cost}, 
+      Description: ${product.description}.
+      The output should be engaging and optimized for search engines.`;
+
+    const requestHeaders = {
+      "Content-Type": "application/json",
+      Authorization:
+          "Bearer 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",
+    };
+
+    const aiResponse = await axios.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        {
+          messages: [
+            {
+              role: "system",
+              content: prompt,
+            },
+          ],
+          model: "llama3-8b-8192",
+          stream: false,
+        },
+        {
+          headers: requestHeaders,
+        }
+    );
+
+    if (
+        aiResponse.data &&
+        aiResponse.data.choices &&
+        aiResponse.data.choices.length > 0 &&
+        aiResponse.data.choices[0].message &&
+        aiResponse.data.choices[0].message.content
+    ) {
+      const seoDescription = aiResponse.data.choices[0].message.content;
+
+      const htmlContent = `
+        <html>
+          <head>
+            <title>${product.name} - SEO Description</title>
+          </head>
+          <body>
+            <h1>${product.name}</h1>
+            <p><strong>Category:</strong> ${product.product_category_id}</p>
+            <p><strong>Price:</strong> ${product.unit_cost}</p>
+            <p><strong>Description:</strong> ${product.description}</p>
+            <h2>SEO-friendly Description:</h2>
+            <p>${seoDescription}</p>
+          </body>
+        </html>
+      `;
+
+      return response.status(StatusCodes.OK).send(htmlContent);
+    } else {
+      throw new Error("Unexpected API response format.");
+    }
+  } catch (error) {
+    console.error('Error generating SEO description:', error.message);
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      error: 'Failed to generate SEO description',
+      details: error.message
+    });
+  }
+};
 module.exports = {
   getCategories,
   getProducts,
@@ -266,4 +343,5 @@ module.exports = {
   updateProduct,
   showProductsInOrder,
   updateOrderStatus,
+  getProductSeoDescription
 }
