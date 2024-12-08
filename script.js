@@ -30,6 +30,7 @@ app.put('/orders/:id', authenticateToken, checkRole(['PRACOWNIK']), db.updateOrd
 
 app.post('/auth/login', db.login);
 app.post('/auth/refresh-token', db.refreshToken);
+app.post('/init', authenticateToken, checkRole(['PRACOWNIK']), db.initDatabase)
 
 
 app.listen(port, () => {

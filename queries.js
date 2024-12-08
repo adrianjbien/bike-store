@@ -391,6 +391,40 @@ const refreshToken = (req, res) => {
   });
 };
 
+const initDatabase = async (request, response) => {
+  const { products } = request.body;
+
+  // if (!products || !Array.isArray(products) || products.length === 0) {
+    if (!products) {
+    return response.status(StatusCodes.BAD_REQUEST).json({
+      error: 'Invalid product data',
+      details: 'Product data must be an array with at least one product.',
+    });
+  }
+
+  const existingProducts = await knex('products').select('*');
+  if (existingProducts.length > 0) {
+    return response.status(StatusCodes.CONFLICT).json({
+      error: 'Products already exist in the database',
+      details: 'The database already contains products.',
+    });
+  }
+
+  try {
+    const insertedProducts = await knex('products').insert(products).returning('*');
+    response.status(StatusCodes.OK).json({
+      message: 'Products initialized successfully',
+      products: insertedProducts
+    });
+  } catch (error) {
+    console.error('Error initializing products:', error);
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      error: 'Failed to initialize products',
+      details: error.message
+    });
+  }
+};
+
 module.exports = {
   getCategories,
   getProducts,
@@ -406,4 +440,5 @@ module.exports = {
   getProductSeoDescription,
   login,
   refreshToken,
+  initDatabase
 }

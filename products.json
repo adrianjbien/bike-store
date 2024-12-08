@@ -1,0 +1,20 @@
+{
+  "products": [
+    {
+      "product_id": 1,
+      "name": "Mountain Bike X1",
+      "description": "A robust mountain bike designed for rough terrains, featuring a lightweight frame and durable tires for off-road adventures.",
+      "unit_cost": 300,
+      "unit_weigth": 15,
+      "product_category_id": 1
+    },
+    {
+      "product_id": 2,
+      "name": "Road Bike Pro",
+      "description": "A high-performance road bike built for speed, with aerodynamic design, lightweight carbon frame, and precision gear shifting for long-distance rides.",
+      "unit_cost": 1300,
+      "unit_weigth": 8,
+      "product_category_id": 2
+    }
+  ]
+}
