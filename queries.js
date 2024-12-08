@@ -335,6 +335,62 @@ const getProductSeoDescription = async (request, response) => {
     });
   }
 };
+
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+
+const crypto = require('crypto');
+require('dotenv').config();
+const jwtSecretKey = process.env.JWT_SECRET;
+
+
+const login = async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const [user] = await knex('users').where({ username });
+    if (!user) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Invalid credentials.' });
+    }
+
+    if (password !== user.password) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Invalid credentials.' });
+    }
+
+    const token = jwt.sign(
+        { id: user.id, role: user.role },
+        jwtSecretKey,
+        { expiresIn: '1h' }
+    );
+    res.status(StatusCodes.OK).json({ token });
+  } catch (error) {
+    console.error('Login error:', error.message);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Login failed.' });
+  }
+};
+const refreshToken = (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Token is required.' });
+  }
+
+  jwt.verify(token, jwtSecretKey, (err, user) => {
+    if (err) {
+      return res.status(StatusCodes.FORBIDDEN).json({ error: 'Invalid or expired token.' });
+    }
+
+    const newToken = jwt.sign(
+        { id: user.id, role: user.role },
+        jwtSecretKey,
+        { expiresIn: '1h' }
+    );
+
+    res.status(StatusCodes.OK).json({ token: newToken });
+  });
+};
+
 module.exports = {
   getCategories,
   getProducts,
@@ -347,5 +403,7 @@ module.exports = {
   updateProduct,
   showProductsInOrder,
   updateOrderStatus,
-  getProductSeoDescription
+  getProductSeoDescription,
+  login,
+  refreshToken,
 }
