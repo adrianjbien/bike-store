@@ -394,8 +394,7 @@ const refreshToken = (req, res) => {
 const initDatabase = async (request, response) => {
   const { products } = request.body;
 
-  // if (!products || !Array.isArray(products) || products.length === 0) {
-    if (!products) {
+  if (!products || !Array.isArray(products) || products.length === 0) {
     return response.status(StatusCodes.BAD_REQUEST).json({
       error: 'Invalid product data',
       details: 'Product data must be an array with at least one product.',
