@@ -199,7 +199,7 @@ const updateOrderStatus = async (request, response) => {
   const id = parseInt(request.params.id)
   const {order_status_id} = request.body
 
-  const order = await knex('orders').where('order_id', id)
+  const order = await knex('orders').where('order_id', id).first();
 
   if (!order) {
     return response.status(StatusCodes.NOT_FOUND).json({
@@ -207,7 +207,7 @@ const updateOrderStatus = async (request, response) => {
       details: `No order found with ID: ${id}`,
     });
   }
-  if (order.order_status_id === 'CANCELLED') {
+  if (order.order_status_id === 'Rejected') {
     return response.status(StatusCodes.BAD_REQUEST).json({
       error: 'Cannot update cancelled order',
       details: 'Once an order is cancelled, its status cannot be changed.',
