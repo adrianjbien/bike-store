@@ -21,7 +21,7 @@ app.get('/products', authenticateToken, checkRole(['KLIENT']), db.getProducts);
 app.get('/products/:id', authenticateToken, checkRole(['KLIENT']),  db.getProductById);
 app.post('/products', authenticateToken, checkRole(['PRACOWNIK']), db.createProduct);
 app.put('/products/:id', authenticateToken, checkRole(['PRACOWNIK']), db.updateProduct);
-
+app.get('/products/:id/seo-description', authenticateToken, checkRole(['PRACOWNIK']), db.getProductSeoDescription)
 app.get('/orders', authenticateToken, checkRole(['KLIENT']), db.getOrders);
 app.post('/orders', authenticateToken, checkRole(['KLIENT']), db.createOrder);
 app.get('/orders/status/:id', authenticateToken, checkRole(['KLIENT']), db.getOrdersStatus);
