@@ -348,6 +348,7 @@ const jwtSecretKey = process.env.JWT_SECRET;
 const login = async (req, res) => {
   const { username, password } = req.body;
 
+
   try {
     const [user] = await knex('users').where({ username });
     if (!user) {
