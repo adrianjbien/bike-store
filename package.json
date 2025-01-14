@@ -2,9 +2,11 @@
     "name": "node-api-postgres",
     "version": "1.0.0",
     "description": "RESTful API with Node.js, Express, and PostgreSQL",
-    "main": "script.js",
+    "main": "back/script.js",
     "license": "MIT",
     "dependencies": {
+        "@fortawesome/free-solid-svg-icons": "^6.7.2",
+        "@fortawesome/react-fontawesome": "^0.2.2",
         "axios": "^1.7.9",
         "bcrypt": "^5.1.1",
         "body-parser": "^1.20.3",
@@ -15,6 +17,9 @@
         "jsonwebtoken": "^9.0.2",
         "knex": "^3.1.0",
         "nodemon": "^3.1.7",
-        "pg": "^8.13.1"
+        "pg": "^8.13.1",
+        "react": "^19.0.0",
+        "react-router-dom": "^7.1.1",
+        "vite": "^6.0.7"
     }
 }
