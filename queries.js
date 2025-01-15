@@ -507,7 +507,27 @@ const initDatabase = async (request, response) => {
     });
   }
 };
+const deleteProduct = async (request, response) => {
+  const { id } = request.params;
 
+  try {
+    const deletedRows = await knex("products").where({ product_id: id }).del();
+
+    if (deletedRows === 0) {
+      return response.status(StatusCodes.NOT_FOUND).json({
+        error: "Product not found",
+        details: `No product found with ID: ${id}`,
+      });
+    }
+
+    response.status(StatusCodes.OK).send(`Product deleted with ID: ${id}`);
+  } catch (error) {
+    response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      error: "Failed to delete product",
+      details: error.message,
+    });
+  }
+};
 module.exports = {
   getCategories,
   getProducts,
@@ -525,4 +545,5 @@ module.exports = {
   refreshToken,
   initDatabase,
   registerUser,
+  deleteProduct,
 };

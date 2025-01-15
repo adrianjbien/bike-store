@@ -80,6 +80,12 @@ app.get(
   checkRole(["PRACOWNIK"]),
   db.showProductsInOrder
 );
+app.delete(
+  "/products/:id",
+  authenticateToken,
+  checkRole(["PRACOWNIK"]),
+  db.deleteProduct
+);
 app.post("/auth/login", db.login);
 app.post("/auth/register", db.registerUser);
 app.post("/auth/refresh-token", db.refreshToken);
