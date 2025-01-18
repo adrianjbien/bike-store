@@ -67,6 +67,7 @@ app.get(
   checkRole(["KLIENT", "PRACOWNIK"]),
   db.getOrdersStatus
 );
+
 app.get("/status", authenticateToken, checkRole(["PRACOWNIK"]), db.getStatus);
 app.put(
   "/orders/:id",

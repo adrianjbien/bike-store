@@ -283,17 +283,25 @@ const updateOrderStatus = async (request, response) => {
   }
 
   try {
-    const newOrder = await knex("orders").where("order_id", id).update({
-      order_status_id: order_status_id,
-    });
-    response
-      .status(StatusCodes.OK)
-      .json({ message: `Order status updated`, order: newOrder });
+    const updatedOrder = await knex("orders")
+      .where("order_id", id)
+      .update({ order_status_id });
+
+    if (updatedOrder) {
+      return response.status(StatusCodes.OK).json({
+        message: "Order status updated successfully",
+      });
+    } else {
+      return response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        error: "Failed to update order status",
+        details: "No rows were updated",
+      });
+    }
   } catch (error) {
-    console.error("Error updating order status:", error);
-    response
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ error: "Failed to update order status", details: error.message });
+    return response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      error: "Failed to update order status",
+      details: error.message,
+    });
   }
 };
 
