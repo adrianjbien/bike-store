@@ -283,9 +283,17 @@ const updateOrderStatus = async (request, response) => {
   }
 
   try {
-    const updatedOrder = await knex("orders")
-      .where("order_id", id)
-      .update({ order_status_id });
+    let updatedOrder = null;
+    if (order.order_status_id === 1) {
+      let updated_date = new Date();
+       updatedOrder = await knex("orders")
+        .where("order_id", id)
+        .update({ accept_date: updated_date, order_status_id: order_status_id });
+    } else {
+       updatedOrder = await knex("orders")
+          .where("order_id", id)
+          .update({ order_status_id });
+    }
 
     if (updatedOrder) {
       return response.status(StatusCodes.OK).json({
