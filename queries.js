@@ -269,7 +269,7 @@ const updateOrderStatus = async (request, response) => {
       details: `No order found with ID: ${id}`,
     });
   }
-  if (order.order_status_id === "Rejected") {
+  if (order.order_status_id === 2) {
     return response.status(StatusCodes.BAD_REQUEST).json({
       error: "Cannot update cancelled order",
       details: "Once an order is cancelled, its status cannot be changed.",
