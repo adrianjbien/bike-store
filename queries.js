@@ -201,12 +201,31 @@ const createOrder = async (request, response) => {
       details: "User name, email, and telephone number are required.",
     });
   }
-  if (!/^\d+$/.test(telephone_number)) {
+
+// Walidacja imienia i nazwiska (tylko litery, opcjonalnie z myślnikiem lub spacją)
+  if (!/^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ\s-]+$/.test(user_name)) {
     return response.status(StatusCodes.BAD_REQUEST).json({
-      error: "Invalid phone number",
-      details: "Telephone number must contain only digits.",
+      error: "Invalid user name",
+      details: "User name must contain only letters, spaces, or hyphens.",
     });
   }
+
+// Walidacja numeru telefonu (9 cyfr)
+  if (!/^\d{9}$/.test(telephone_number)) {
+    return response.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid phone number",
+      details: "Telephone number must contain exactly 9 digits.",
+    });
+  }
+
+// Walidacja emaila (format emailowy)
+  if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+    return response.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid email",
+      details: "Email must be in a valid format, e.g., user@example.com.",
+    });
+  }
+
   // Walidacja produktów
   if (!products || products.length === 0) {
     return response.status(StatusCodes.BAD_REQUEST).json({
@@ -284,11 +303,11 @@ const updateOrderStatus = async (request, response) => {
 
   try {
     let updatedOrder = null;
-    if (order.order_status_id === 1) {
-      let updated_date = new Date();
+    if ((order.order_status_id === 1 && order_status_id !== 2) || (order.order_status_id === 1 && order_status_id === 4)) {
+      let local_date = new Date()
        updatedOrder = await knex("orders")
         .where("order_id", id)
-        .update({ accept_date: updated_date, order_status_id: order_status_id });
+        .update({ accept_date: local_date, order_status_id: order_status_id });
     } else {
        updatedOrder = await knex("orders")
           .where("order_id", id)
